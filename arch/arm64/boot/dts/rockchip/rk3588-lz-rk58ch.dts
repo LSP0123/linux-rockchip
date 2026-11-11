@@ -678,6 +678,24 @@
 
 	/*--------------- Board pinctrl ---------------*/
 	pinctrl {
+		sdio {
+			/omit-if-no-ref/
+			sdiom0_lz: sdiom0-lz {
+				rockchip,pins =
+					/* sdio_clk_m0 */
+					<2 RK_PB3 2 &pcfg_pull_none>,
+					/* sdio_cmd_m0 */
+					<2 RK_PB2 2 &pcfg_pull_up>,
+					/* sdio_d0_m0 */
+					<2 RK_PA6 2 &pcfg_pull_up>,
+					/* sdio_d1_m0 */
+					<2 RK_PA7 2 &pcfg_pull_up>,
+					/* sdio_d2_m0 */
+					<2 RK_PB0 2 &pcfg_pull_up>,
+					/* sdio_d3_m0 */
+					<2 RK_PB1 2 &pcfg_pull_up>;
+			};
+		};
 		ble-4g {
 			vcc_2v8_gpio: vcc-2v8-gpio {
 				rockchip,pins = <0 RK_PB7 RK_FUNC_GPIO &pcfg_pull_none>;
@@ -1517,6 +1535,15 @@
 &sdio {
 	status = "okay";
 	mmc-pwrseq = <&sdio_pwrseq>;
+	/*
+	 * WiFi SDIO is routed to the M0 pins (GPIO2_A6/A7, GPIO2_B0-B3).
+	 * The 6.1 SoC dtsi defaults to sdiom1_pins whose clock pin is
+	 * GPIO3_A5 - which is this board's eDP panel power-enable GPIO
+	 * (vcc3v3-edp); the pinmux conflict left the panel without power.
+	 * The SoC dtsi has no sdiom0 group, so define one locally with the
+	 * pin list taken from the stock 5.10 firmware DTB.
+	 */
+	pinctrl-0 = <&sdiom0_lz>;
 };
 
 /* SD card: unused in the stock firmware; keep supply config */
@@ -1537,7 +1564,29 @@
 /*--------------- UART ---------------*/
 
 /* UART0 (GPIO0_D1/D2, ODM usage) */
+/*
+ * Debug console mux fix: the shared rk3588-linux.dtsi routes the
+ * fiq-debugger to the UART2 M0 pins (GPIO0_B5/B6), but this board's
+ * serial header is wired to the M2 pins (GPIO3_B1/B2) - the same
+ * routing our board U-Boot uses. Without this override the kernel
+ * steals the M0 pins at fiq_debugger probe time and the port goes
+ * silent right after "Starting kernel ...".
+ */
+&fiq_debugger {
+	pinctrl-0 = <&uart2m2_xfer>;
+};
+
+/*
+ * UART0 (ODM usage): explicitly route to the M2 pins (GPIO4_A3/A4),
+ * matching the stock firmware. The 6.1 SoC dtsi defaults to
+ * uart0m1_xfer (GPIO0_B0/B1) - its B1 pin is the SPI2 chip-select
+ * (spi2m2_cs0) that talks to the RK806 PMIC; with the default mux the
+ * pin request collides, SPI2 fails to probe and the whole PMIC (and
+ * everything powered by it: eDP panel, GPU, CPU DVFS) stays down.
+ */
 &uart0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart0m2_xfer>;
 	status = "okay";
 };
 
