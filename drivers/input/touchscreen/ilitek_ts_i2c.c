@@ -674,7 +674,6 @@ static const struct of_device_id ilitek_ts_i2c_match[] = {
 	{.compatible = "ilitek,ili2326",},
 	{.compatible = "ilitek,ili2520",},
 	{.compatible = "ilitek,ili2521",},
-	{.compatible = "ilitek,ili2511",},
 	{ },
 };
 MODULE_DEVICE_TABLE(of, ilitek_ts_i2c_match);
