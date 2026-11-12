@@ -1386,10 +1386,21 @@
 	mem-supply = <&vdd_cpu_big1_mem_s0>;
 };
 
+/* GPU: run on the mainline Panthor DRM KMD instead of the vendor kbase
+ * DDK. Standard Mesa (trixie) ships the panthor userspace and
+ * armbian-firmware provides arm/mali/arch10.8/mali_csffw.bin, so
+ * GL/Wayland acceleration works out of the box; the vendor kbase path
+ * would need panfork/libmali userspace that the standard repos do not
+ * carry (desktop falls back to llvmpipe software rendering). Equivalent
+ * to the official rockchip-rk3588-panthor-gpu overlay: vendor &gpu off,
+ * &gpu_panthor on. */
 &gpu {
-	mali-supply = <&vdd_gpu_s0>;
-	mem-supply = <&vdd_gpu_mem_s0>;
+	status = "disabled";
+};
+
+&gpu_panthor {
 	status = "okay";
+	mali-supply = <&vdd_gpu_s0>;
 };
 
 &rknpu {
