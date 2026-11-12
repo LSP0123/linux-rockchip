@@ -349,6 +349,11 @@
 		rockchip,sleep-debug-en = <1>;
 		rockchip,sleep-mode-config = <0x01000608>;
 		rockchip,wakeup-config = <0x100>;
+		/* poweroff goes through the vendor virtual-poweroff path (SIP suspend
+		 * with PMIC rails off). The default PSCI SYSTEM_OFF path powers the
+		 * board back up (full reset) on this hardware instead of staying
+		 * off, so route shutdown through the Rockchip SIP handler. */
+		rockchip,virtual-poweroff = <1>;
 	};
 
 	rockchip_system_monitor: rockchip-system-monitor {
